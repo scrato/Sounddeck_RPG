@@ -10,13 +10,15 @@ namespace RPG_Deck
     public class Song
     {
         public string Name { get; set; }
-        public string? Description { get; set; }
+        public string Description { get; set; }
         public string Path { get; set; }
 
         public Song(string name, string path)
         {
             Name = name;
             Path = path;
-        }   
+        }
+        
+        public Song() { }
     }
 }

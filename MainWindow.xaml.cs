@@ -54,17 +54,11 @@ namespace RPG_Deck
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                Filter = "Audio files (*.mp3;*.wav)|*.mp3;*.wav"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                var audioButton = InitButton(openFileDialog.FileName, openFileDialog.FileName);
-                
-                ButtonsPanel.Children.Add(audioButton);
-            }
+            var song = AddOrEditSongInfo();
+            if (song == null)
+                return;
+            var audioButton = InitButton(song.Name, song.Path);
+            ButtonsPanel.Children.Add(audioButton);
         }
 
         private Button InitButton(string name, string path)
@@ -78,7 +72,7 @@ namespace RPG_Deck
                 Tag = path,
                 ContextMenu = (ContextMenu)Resources["ButtonContextMenu"],
                 Style = customButtonStyle,
-                ToolTip = System.IO.Path.GetFileNameWithoutExtension(name)
+                ToolTip = System.IO.Path.GetFileNameWithoutExtension(path)
             };
 
             // Anpassen der Button-Größe basierend auf der Schriftgröße
@@ -216,24 +210,41 @@ namespace RPG_Deck
                 Button audioButton = ((ContextMenu)menuItem.Parent).PlacementTarget as Button;
                 if (audioButton != null)
                 {
+                    var newInfo = AddOrEditSongInfo(new Song(audioButton.Content.ToString(), audioButton.Tag.ToString()));
+                    if (newInfo == null)
+                        return;
                     // Change the button content
-                    string newName = Microsoft.VisualBasic.Interaction.InputBox("Enter the new button name:", "Edit Button Name", audioButton.Content.ToString());
-                    if (!string.IsNullOrEmpty(newName))
-                    {
-                        audioButton.Content = newName;
-                    }
+                    audioButton.Content = newInfo.Name;
 
                     // Change the audio file path
-                    OpenFileDialog openFileDialog = new OpenFileDialog
-                    {
-                        Filter = "Audio files (*.mp3;*.wav)|*.mp3;*.wav"
-                    };
-                    if (openFileDialog.ShowDialog() == true)
-                    {
-                        audioButton.Tag = openFileDialog.FileName;
-                    }
+                    audioButton.Tag = newInfo.Path;
                 }
             }
+        }
+
+        private Song AddOrEditSongInfo(Song original = null)
+        {
+            var result = original ?? new Song();
+
+
+            // Change the audio file path
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Audio files (*.mp3;*.wav)|*.mp3;*.wav"
+            };
+            if (!openFileDialog.ShowDialog() == true)
+                return null;
+                
+            result.Path = openFileDialog.FileName;
+
+            // Change the button content
+            string newName = Microsoft.VisualBasic.Interaction.InputBox("Enter the new button name:", "Edit Button Name", result.Name);
+            if (string.IsNullOrEmpty(newName))
+                return null;
+            
+            result.Name = newName;
+            
+            return result;
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
@@ -249,7 +260,7 @@ namespace RPG_Deck
             }
         }
 
-        private void UiWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _songList.Songs.Clear();
             foreach (var button in ButtonsPanel.Children.OfType<Button>())
@@ -260,5 +271,6 @@ namespace RPG_Deck
 
             File.WriteAllText(c_ConfigPath ,JsonConvert.SerializeObject(_songList));
         }
+
     }
 }
