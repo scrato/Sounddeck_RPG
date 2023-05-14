@@ -16,6 +16,7 @@ using NAudio.WaveFormRenderer;
 using Newtonsoft.Json;
 using System.Threading;
 using System.Windows.Input;
+using MaterialDesignColors.Recommended;
 
 namespace RPG_Deck
 {
@@ -271,12 +272,12 @@ namespace RPG_Deck
                 {
                     var settings = new StandardWaveFormRendererSettings
                     {
-                        Width = (int)Math.Max(WaveFormImage.ActualWidth,780),
-                        TopHeight = (int)Math.Max(WaveFormImage.ActualHeight,100) / 2,
-                        BottomHeight = (int)Math.Max(WaveFormImage.ActualHeight,100) / 2,
+                        Width = (int)Math.Max(WaveFormImage.ActualWidth, 780),
+                        TopHeight = (int)Math.Max(WaveFormImage.ActualHeight, 100) / 2,
+                        BottomHeight = (int)Math.Max(WaveFormImage.ActualHeight, 100) / 2,
                         TopPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1)),
-                        BottomPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1))
-                        
+                        BottomPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1)),
+                        BackgroundColor = System.Drawing.Color.FromArgb(0, 0, 0, 0)
                     };
 
                     WaveFormRenderer renderer = new WaveFormRenderer();
