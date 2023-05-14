@@ -222,6 +222,7 @@ namespace RPG_Deck
             // Change the audio file path
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
+                FileName = result.Path,
                 Filter = "Audio files (*.mp3;*.wav)|*.mp3;*.wav"
             };
             if (!openFileDialog.ShowDialog() == true)
@@ -276,7 +277,7 @@ namespace RPG_Deck
                         TopHeight = (int)Math.Max(WaveFormImage.ActualHeight, 100) / 2,
                         BottomHeight = (int)Math.Max(WaveFormImage.ActualHeight, 100) / 2,
                         TopPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1)),
-                        BottomPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1)),
+                        BottomPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255,166,72,0)),
                         BackgroundColor = System.Drawing.Color.FromArgb(0, 0, 0, 0)
                     };
 

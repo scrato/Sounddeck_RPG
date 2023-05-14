@@ -14,6 +14,10 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="DeepOrange" SecondaryColor="Amber" />
             </ResourceDictionary.MergedDictionaries>
+        <ContextMenu x:Key="ButtonContextMenu">
+            <MenuItem Header="Edit" Click="EditButton_Click"/>
+            <MenuItem Header="Delete" Click="DeleteButton_Click"/>
+        </ContextMenu>
         </ResourceDictionary>
     </Window.Resources>
     <DockPanel LastChildFill="True">
