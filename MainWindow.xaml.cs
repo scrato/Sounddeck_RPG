@@ -1,14 +1,21 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
+using Color = System.Windows.Media.Color;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using NAudio.WaveFormRenderer;
 using Newtonsoft.Json;
+using System.Threading;
+using System.Windows.Input;
 
 namespace RPG_Deck
 {
@@ -19,14 +26,15 @@ namespace RPG_Deck
     {
         private WaveOutEvent _outputDevice;
         private AudioFileReader _audioFile;
-        private AudioFileReader _nextAudioFile;
         private VolumeSampleProvider _volumeProvider;
+        private readonly TimeSpan _progressUpdateInterval = TimeSpan.FromMilliseconds(100);
+        private CancellationTokenSource _progressCancellationTokenSource;
         private bool _isMuted;
 
         private SongList _songList = new SongList();
         private const string c_ConfigPath = "config.json";
 
-        private Brush _standardButtonBGColor;
+        private System.Windows.Media.Brush _standardButtonBGColor;
 
 
         public MainWindow()
@@ -64,7 +72,7 @@ namespace RPG_Deck
         private Button InitButton(string name, string path)
         {
             string displayName = ShrinkTextToFit(System.IO.Path.GetFileNameWithoutExtension(name));
-            Style customButtonStyle = (Style)Resources["CustomButtonStyle"];
+            Style customButtonStyle = (Style)FindResource("MaterialDesignFloatingActionButton");
 
             Button audioButton = new Button
             {
@@ -72,15 +80,11 @@ namespace RPG_Deck
                 Tag = path,
                 ContextMenu = (ContextMenu)Resources["ButtonContextMenu"],
                 Style = customButtonStyle,
-                ToolTip = System.IO.Path.GetFileNameWithoutExtension(path)
+                ToolTip = System.IO.Path.GetFileNameWithoutExtension(path),
+                Height = 60,
+                Width = 60,
+                Margin = new Thickness(5)
             };
-
-            // Anpassen der Button-Größe basierend auf der Schriftgröße
-            if (displayName.Length > 10)
-            {
-                audioButton.Height = 50;
-                audioButton.Width = 50;
-            }
 
             audioButton.Click += AudioButton_Click;
             return audioButton;
@@ -101,15 +105,6 @@ namespace RPG_Deck
             return text;
         }
 
-        // 5. Aktualisiere den Slider, wenn der Wert geändert wird
-        private void ProgressSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (_audioFile != null)
-            {
-                _audioFile.Position = (long)(_audioFile.Length * (e.NewValue / 100));
-            }
-        }
-
         private void AudioButton_Click(object sender, RoutedEventArgs e)
         {
             Button clickedButton = sender as Button;
@@ -117,6 +112,7 @@ namespace RPG_Deck
             {
                 PlayAudio(clickedButton.Tag.ToString());
                 UpdateButtonColors(clickedButton);
+                RenderWaveform(clickedButton.Tag.ToString());
             }
         }
 
@@ -148,24 +144,18 @@ namespace RPG_Deck
 
             // Initialize and play the new output device
             _outputDevice = new WaveOutEvent();
+            _outputDevice.PlaybackStopped += OnPlaybackStopped;
             _outputDevice.Init(_volumeProvider);
             _volumeProvider.Volume = 0;
+
+
             _outputDevice.Play();
-
-
-            // 6.1. Aktualisiere den Slider
-            _outputDevice.PlaybackStopped += (s, e) => { ProgressSlider.Value = 0; };
-            var task = Task.Run(async () =>
-            {
-                while (_outputDevice.PlaybackState == PlaybackState.Playing)
-                {
-                    await Task.Delay(1000);
-                    Dispatcher.Invoke(() => { ProgressSlider.Value = (double)_audioFile.Position / _audioFile.Length * 100; });
-                }
-            });
 
             // Fade in the new audio file
             await FadeVolume(1, TimeSpan.FromSeconds(2));
+
+            // Start updating the progress bar
+            await UpdateProgress();
         }
 
         private async void MuteButton_Click(object sender, RoutedEventArgs e)
@@ -177,16 +167,17 @@ namespace RPG_Deck
                 if ((string)MuteIcon.Tag == "unmuted")
                 {
                     MuteIcon.Tag = "muted";
-                    MuteIcon.Data = Geometry.Parse("M0,6 L0,18 L4,18 L11,24 L11,0 L4,6 L0,6 z M14,12 L22,19 L20,21 L12,13 L4,21 L6,19 L14,12 z");
+                    MuteIcon.Kind = PackIconKind.VolumeOff;
                 }
                 else
                 {
                     MuteIcon.Tag = "unmuted";
-                    MuteIcon.Data = Geometry.Parse("M3,9 L3,15 L9,15 L15,21 L15,3 L9,9 L3,9 z M19,15 L19,9 L17,9 L17,15 z M23,5 L23,19 L21,19 L21,5 z");
+                    MuteIcon.Kind = PackIconKind.VolumeHigh;
                 }
                 await FadeVolume(_isMuted ? 0 : 1, TimeSpan.FromSeconds(2));
             }
         }
+
         private async Task FadeVolume(float targetVolume, TimeSpan duration)
         {
             if (_volumeProvider == null) return;
@@ -272,5 +263,90 @@ namespace RPG_Deck
             File.WriteAllText(c_ConfigPath ,JsonConvert.SerializeObject(_songList));
         }
 
+        private void RenderWaveform(string audioFilePath)
+        {
+            if (File.Exists(audioFilePath))
+            {
+                using (var reader = new AudioFileReader(audioFilePath))
+                {
+                    var settings = new StandardWaveFormRendererSettings
+                    {
+                        Width = (int)Math.Max(WaveFormImage.ActualWidth,780),
+                        TopHeight = (int)Math.Max(WaveFormImage.ActualHeight,100) / 2,
+                        BottomHeight = (int)Math.Max(WaveFormImage.ActualHeight,100) / 2,
+                        TopPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1)),
+                        BottomPeakPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 243, 106, 1))
+                        
+                    };
+
+                    WaveFormRenderer renderer = new WaveFormRenderer();
+                    var waveformImage = renderer.Render(reader, settings);
+                    WaveFormImage.Source = ConvertBitmapToImageSource(waveformImage as System.Drawing.Bitmap);
+                }
+            }
+        }
+
+        private ImageSource ConvertBitmapToImageSource(Bitmap bitmap)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
+                memory.Position = 0;
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze();
+
+                return bitmapImage;
+            }
+        }
+
+        private async Task UpdateProgress()
+        {
+            _progressCancellationTokenSource?.Cancel();
+            _progressCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _progressCancellationTokenSource.Token;
+
+            while (_outputDevice != null && _outputDevice.PlaybackState.HasFlag(PlaybackState.Playing) && !cancellationToken.IsCancellationRequested)
+            {
+                // Calculate progress
+                double progress = _audioFile.Position / (double)_audioFile.Length;
+
+                // Update progress bar on UI thread
+                await Dispatcher.InvokeAsync(() => ProgressRectangle.SetValue(Canvas.LeftProperty, progress * WaveFormImage.ActualWidth));
+
+                // Wait for the interval
+                await Task.Delay(_progressUpdateInterval);
+            }
+        }
+
+        private void OnPlaybackStopped(object sender, StoppedEventArgs e)
+        {
+            ProgressRectangle.SetValue(Canvas.LeftProperty, 0.0);
+        }
+
+        private async void WaveFormImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_audioFile != null && _outputDevice != null)
+            {
+                double mouseX = e.GetPosition(WaveFormImage).X;
+                double clickedRatio = mouseX / WaveFormImage.ActualWidth;
+                long newPosition = (long)(_audioFile.Length * clickedRatio);
+
+                // Fade out the current audio file
+                await FadeVolume(0, TimeSpan.FromSeconds(0.5));
+
+                // Change the position of the audio file
+                _audioFile.Position = newPosition;
+
+                // Fade in the audio file
+                await FadeVolume(1, TimeSpan.FromSeconds(0.5));
+
+                // Restart progress update
+                await UpdateProgress();
+            }
+        }
     }
 }
