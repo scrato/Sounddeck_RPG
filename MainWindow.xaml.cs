@@ -58,6 +58,7 @@ namespace RPG_Deck
                 Button audioButton = InitButton(song.Name, song.Path);
                 ButtonsPanel.Children.Add(audioButton);
             }
+            UpdateButtonColors(null);
 
         }
 
@@ -348,6 +349,28 @@ namespace RPG_Deck
 
                 // Restart progress update
                 await UpdateProgress();
+            }
+        }
+
+        private async void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_outputDevice != null)
+            {
+                _isMuted = !_isMuted;
+                // Aktualisiere das Lautsprecher-Symbol, wenn der Button geklickt wird
+                if ((string)MuteIcon.Tag == "unmuted")
+                {
+                    MuteIcon.Tag = "muted";
+                    MuteIcon.Kind = PackIconKind.VolumeOff;
+                }
+                else
+                {
+                    MuteIcon.Tag = "unmuted";
+                    MuteIcon.Kind = PackIconKind.VolumeHigh;
+                }
+                await FadeVolume(0 , TimeSpan.FromSeconds(2));
+                _outputDevice.Stop();
+                UpdateButtonColors(null);
             }
         }
     }

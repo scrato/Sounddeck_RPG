@@ -28,6 +28,9 @@
             <Button x:Name="MuteButton" Click="MuteButton_Click" Style="{StaticResource MaterialDesignFloatingActionButton}" Canvas.Right="10" Canvas.Bottom="10">
                 <materialDesign:PackIcon x:Name="MuteIcon" Kind="VolumeHigh" Tag="unmuted" />
             </Button>
+            <Button x:Name="StopButton" Click="StopButton_Click" Style="{StaticResource MaterialDesignFloatingActionButton}" Canvas.Right="130" Canvas.Bottom="10">
+                <materialDesign:PackIcon x:Name="StopIcon" Kind="Stop" />
+            </Button>
         </Canvas>
         <StackPanel Orientation="Vertical">
             <WrapPanel x:Name="ButtonsPanel" Orientation="Horizontal"/>
