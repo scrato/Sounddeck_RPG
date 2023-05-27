@@ -36,7 +36,7 @@ namespace RPG_Deck
         private const string c_ConfigPath = "config.json";
 
         private System.Windows.Media.Brush _standardButtonBGColor;
-
+        double fadeInterval = 2;
 
         public MainWindow()
         {
@@ -131,7 +131,7 @@ namespace RPG_Deck
             if (_outputDevice != null)
             {
                 // Fade out the current audio file
-                await FadeVolume(0, TimeSpan.FromSeconds(2));
+                await FadeVolume(0, TimeSpan.FromSeconds(fadeInterval));
 
                 // Reset the output device
                 _outputDevice.Stop();
@@ -154,11 +154,17 @@ namespace RPG_Deck
             _outputDevice.Play();
 
             // Fade in the new audio file
-            await FadeVolume(1, TimeSpan.FromSeconds(2));
+            await FadeVolume(1, TimeSpan.FromSeconds(fadeInterval));
 
             // Start updating the progress bar
             await UpdateProgress();
         }
+
+        private void FadeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            double fadeInterval = e.NewValue;
+        }
+
 
         private async void MuteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -176,7 +182,7 @@ namespace RPG_Deck
                     MuteIcon.Tag = "unmuted";
                     MuteIcon.Kind = PackIconKind.VolumeHigh;
                 }
-                await FadeVolume(_isMuted ? 0 : 1, TimeSpan.FromSeconds(2));
+                await FadeVolume(_isMuted ? 0 : 1, TimeSpan.FromSeconds(fadeInterval));
             }
         }
 
@@ -339,13 +345,13 @@ namespace RPG_Deck
                 long newPosition = (long)(_audioFile.Length * clickedRatio);
 
                 // Fade out the current audio file
-                await FadeVolume(0, TimeSpan.FromSeconds(0.5));
+                await FadeVolume(0, TimeSpan.FromSeconds(Math.Max(fadeInterval, 1) / 2));
 
                 // Change the position of the audio file
                 _audioFile.Position = newPosition;
 
                 // Fade in the audio file
-                await FadeVolume(1, TimeSpan.FromSeconds(0.5));
+                await FadeVolume(1, TimeSpan.FromSeconds(Math.Max(fadeInterval, 1) / 2));
 
                 // Restart progress update
                 await UpdateProgress();

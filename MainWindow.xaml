@@ -42,6 +42,7 @@
                        MouseLeftButtonDown="WaveFormImage_MouseLeftButtonDown"  />
                 <Rectangle x:Name="ProgressRectangle" Width="2" Height="100" Fill="DeepSkyBlue" />
             </Canvas>
+            <Slider x:Name="FadeSlider" Minimum="1" Maximum="10" Value="2" TickFrequency="1" TickPlacement="BottomRight" Width="200" Margin="10" ValueChanged="FadeSlider_ValueChanged" />
         </StackPanel>
     </DockPanel>
 </Window>
