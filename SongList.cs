@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace RPG_Deck
+namespace RPGDeck.WPF
 {
     public class SongList
     {
@@ -18,7 +18,7 @@ namespace RPG_Deck
             Name = name;
             Path = path;
         }
-        
+
         public Song() { }
     }
 }

@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System.Threading;
 using System.Windows.Input;
 using MaterialDesignColors.Recommended;
+using RPGDeck.WPF;
 
 namespace RPG_Deck
 {
@@ -162,7 +163,7 @@ namespace RPG_Deck
 
         private void FadeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            double fadeInterval = e.NewValue;
+            fadeInterval = e.NewValue;
         }
 
 
@@ -330,6 +331,8 @@ namespace RPG_Deck
                 await Task.Delay(_progressUpdateInterval);
             }
         }
+
+
 
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
         {
