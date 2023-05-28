@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Audio Player" Height="450" Width="900"
-        Background="#1f1f1f" Closing="Window_Closing">
+        Background="#1f1f1f" Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -37,7 +37,10 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <WrapPanel x:Name="ButtonsPanel" Orientation="Horizontal"/>
+            <WrapPanel x:Name="ButtonsPanel" 
+                       Drop="ButtonsPanel_Drop"  AllowDrop="True"
+                       DragEnter="ButtonsPanel_DragEnter" 
+                       Orientation="Horizontal"/>
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="100"/>

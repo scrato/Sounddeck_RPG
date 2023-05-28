@@ -18,6 +18,7 @@ using System.Threading;
 using System.Windows.Input;
 using MaterialDesignColors.Recommended;
 using RPGDeck.WPF;
+using Point = System.Windows.Point;
 
 namespace RPG_Deck
 {
@@ -60,10 +61,14 @@ namespace RPG_Deck
                 ButtonsPanel.Children.Add(audioButton);
             }
             UpdateButtonColors(null);
-
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddNewSong();
+        }
+
+        private void AddNewSong()
         {
             var song = AddOrEditSongInfo();
             if (song == null)
@@ -76,7 +81,6 @@ namespace RPG_Deck
         {
             string displayName = ShrinkTextToFit(System.IO.Path.GetFileNameWithoutExtension(name));
             Style customButtonStyle = (Style)FindResource("MaterialDesignFloatingActionButton");
-
             Button audioButton = new Button
             {
                 Content = displayName,
@@ -89,9 +93,13 @@ namespace RPG_Deck
                 Margin = new Thickness(5)
             };
 
+            audioButton.AllowDrop = true;
+            audioButton.MouseMove += AudioButton_MouseMove;
+            audioButton.MouseLeave += AudioButton_MouseLeave;
             audioButton.Click += AudioButton_Click;
             return audioButton;
         }
+
 
         private string ShrinkTextToFit(string text)
         {
@@ -382,5 +390,66 @@ namespace RPG_Deck
                 UpdateButtonColors(null);
             }
         }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_songList.Songs.Count == 0)
+                AddNewSong();
+        }
+
+        // Handle the MouseMove event for each Button.
+        private void AudioButton_MouseMove(object sender, MouseEventArgs e)
+        {
+            Cursor = Cursors.Hand;
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                Button button = (Button)sender;
+                DragDrop.DoDragDrop(button, button, DragDropEffects.Move);
+            }
+        }
+
+        private void AudioButton_MouseLeave(object sender, MouseEventArgs e)
+        {
+            Cursor = Cursors.Arrow;
+        }
+
+
+        // Handle the DragEnter event for the ButtonsPanel.
+        private void ButtonsPanel_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(typeof(Button)) || sender == e.Source)
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        // Handle the Drop event for the ButtonsPanel.
+        private void ButtonsPanel_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(Button)))
+            {
+                Button button = e.Data.GetData(typeof(Button)) as Button;
+                ButtonsPanel.Children.Remove(button);
+                Point dropPosition = e.GetPosition(ButtonsPanel);
+                int index = CalculateDropIndex(dropPosition);
+                ButtonsPanel.Children.Insert(index, button);
+            }
+        }
+
+        // This method calculates the index where the button should be dropped.
+        private int CalculateDropIndex(Point dropPosition)
+        {
+            for (int i = 0; i < ButtonsPanel.Children.Count; i++)
+            {
+                Rect childBounds = VisualTreeHelper.GetDescendantBounds((Visual)ButtonsPanel.Children[i]);
+                if (dropPosition.X < childBounds.Width)
+                {
+                    return i;
+                }
+                dropPosition.X -= childBounds.Width;
+            }
+            return ButtonsPanel.Children.Count;
+        }
+
     }
 }
