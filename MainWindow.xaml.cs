@@ -123,6 +123,7 @@ namespace RPG_Deck
             Button clickedButton = sender as Button;
             if (clickedButton != null)
             {
+                SetRepeat(false);
                 PlayAudio(clickedButton.Tag.ToString());
                 UpdateButtonColors(clickedButton);
                 RenderWaveform(clickedButton.Tag.ToString());
@@ -139,7 +140,7 @@ namespace RPG_Deck
 
         private async void PlayAudio(string fileName)
         {
-            _currentPlaying = fileName;
+            
             if (_outputDevice != null)
             {
                 // Fade out the current audio file
@@ -158,18 +159,20 @@ namespace RPG_Deck
 
             // Initialize and play the new output device
             _outputDevice = new WaveOutEvent();
+            _outputDevice.PlaybackStopped -= OnPlaybackStopped;
             _outputDevice.PlaybackStopped += OnPlaybackStopped;
             _outputDevice.Init(_volumeProvider);
             _volumeProvider.Volume = 0;
 
-
             _outputDevice.Play();
+            
 
             // Fade in the new audio file
             await FadeVolume(1, TimeSpan.FromSeconds(fadeInterval));
 
             // Start updating the progress bar
             await UpdateProgress();
+            _currentPlaying = fileName;
         }
 
         private void FadeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -359,6 +362,9 @@ namespace RPG_Deck
                 double clickedRatio = mouseX / WaveFormImage.ActualWidth;
                 long newPosition = (long)(_audioFile.Length * clickedRatio);
 
+
+                SetRepeat(false);
+
                 // Fade out the current audio file
                 await FadeVolume(0, TimeSpan.FromSeconds(Math.Max(fadeInterval, 1) / 2));
 
@@ -379,6 +385,7 @@ namespace RPG_Deck
         {
             if (_outputDevice != null)
             {
+                SetRepeat(false);
                 _isMuted = !_isMuted;
                 // Aktualisiere das Lautsprecher-Symbol, wenn der Button geklickt wird
                 if ((string)MuteIcon.Tag == "unmuted")
@@ -399,13 +406,19 @@ namespace RPG_Deck
 
         private void RepeatButton_Click(object sender, RoutedEventArgs e)
         {
+            SetRepeat(!_isRepeating);
+        }
+
+
+        private void SetRepeat(bool value)
+        {
             if (_outputDevice != null)
-            {
-                _isRepeating = !_isRepeating;
-                // Aktualisiere das Lautsprecher-Symbol, wenn der Button geklickt wird
-                if ((string)RepeatIcon.Tag == "repeating")
                 {
-                    //MuteIcon.Tag = "muted";
+                _isRepeating = value;
+                // Aktualisiere das Lautsprecher-Symbol, wenn der Button geklickt wird
+                if (!value)
+                {
+                    RepeatIcon.Tag = "repeatOff";
                     RepeatIcon.Kind = PackIconKind.RepeatOff;
                 }
                 else
