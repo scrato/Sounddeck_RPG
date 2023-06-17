@@ -31,6 +31,9 @@
             <Button x:Name="StopButton" Click="StopButton_Click" Style="{StaticResource MaterialDesignFloatingActionButton}" Margin="10">
                 <materialDesign:PackIcon x:Name="StopIcon" Kind="Stop" />
             </Button>
+            <Button x:Name="RepeatButton" Click="RepeatButton_Click" Style="{StaticResource MaterialDesignFloatingActionButton}" Margin="10">
+                <materialDesign:PackIcon x:Name="RepeatIcon" Kind="RepeatOff" />
+            </Button>
         </StackPanel>
         <Grid>
             <Grid.RowDefinitions>

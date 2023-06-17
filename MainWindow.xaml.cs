@@ -33,6 +33,8 @@ namespace RPG_Deck
         private readonly TimeSpan _progressUpdateInterval = TimeSpan.FromMilliseconds(100);
         private CancellationTokenSource _progressCancellationTokenSource;
         private bool _isMuted;
+        private bool _isRepeating;
+        private string _currentPlaying;
 
         private SongList _songList = new SongList();
         private const string c_ConfigPath = "config.json";
@@ -137,6 +139,7 @@ namespace RPG_Deck
 
         private async void PlayAudio(string fileName)
         {
+            _currentPlaying = fileName;
             if (_outputDevice != null)
             {
                 // Fade out the current audio file
@@ -345,6 +348,7 @@ namespace RPG_Deck
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
         {
             ProgressRectangle.SetValue(Canvas.LeftProperty, 0.0);
+            if(_isRepeating && _currentPlaying != null) { PlayAudio(_currentPlaying); }
         }
 
         private async void WaveFormImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -369,6 +373,8 @@ namespace RPG_Deck
             }
         }
 
+
+
         private async void StopButton_Click(object sender, RoutedEventArgs e)
         {
             if (_outputDevice != null)
@@ -388,6 +394,25 @@ namespace RPG_Deck
                 await FadeVolume(0 , TimeSpan.FromSeconds(2));
                 _outputDevice.Stop();
                 UpdateButtonColors(null);
+            }
+        }
+
+        private void RepeatButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_outputDevice != null)
+            {
+                _isRepeating = !_isRepeating;
+                // Aktualisiere das Lautsprecher-Symbol, wenn der Button geklickt wird
+                if ((string)RepeatIcon.Tag == "repeating")
+                {
+                    //MuteIcon.Tag = "muted";
+                    RepeatIcon.Kind = PackIconKind.RepeatOff;
+                }
+                else
+                {
+                    RepeatIcon.Tag = "repeating";
+                    RepeatIcon.Kind = PackIconKind.Repeat;
+                }
             }
         }
 
@@ -451,5 +476,6 @@ namespace RPG_Deck
             return ButtonsPanel.Children.Count;
         }
 
+   
     }
 }
